@@ -1,0 +1,65 @@
+﻿@page "/confederacion/nueva"
+@page "/confederacion/editar/{Id:int}"
+@inject HttpClient _http;
+@inject NavigationManager _navegador;
+
+<h3>@letrero Confederacion</h3>
+
+<EditForm Model="laconfederacion" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="mb-3 row">
+        <label for="txtNombre" class="col-sm-2 col-form-label">Nombre</label>
+        <div class="col-sm-10">
+            <InputText id="txtNombre" class="form-control" @bind-Value="laconfederacion.Nombre_confederacion" />
+            <ValidationMessage For="()=>laconfederacion.Nombre_confederacion" />
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <label for="txtNombre" class="col-sm-2 col-form-label">Logo</label>
+        <div class="col-sm-10">
+            <InputText id="txtNombre" class="form-control" @bind-Value="laconfederacion.Logo" />
+            <ValidationMessage For="()=>laconfederacion.Logo" />
+        </div>
+    </div>
+    <button class="btn btn-success" type="submit">Guardar</button>
+    <button class="btn btn-danger" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Confederacion laconfederacion = new();
+    private string letrero = "Nueva";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == 0)
+        {
+            letrero = "Nueva";
+            laconfederacion = new();
+        }
+        else
+        {
+            letrero = "Modificar";
+            laconfederacion = await _http.GetFromJsonAsync<Confederacion>($"api/confederaciones/{Id}");
+        }
+    }
+
+    private async void Guardar()
+    {
+        if (Id == 0)
+        {
+            await _http.PostAsJsonAsync<Confederacion>("api/confederaciones", laconfederacion);
+        }
+        else
+        {
+            await _http.PutAsJsonAsync<Confederacion>($"api/confederaciones/{Id}", laconfederacion);
+        }
+        _navegador.NavigateTo("/confederaciones");
+    }
+
+    private void Cancelar()
+    {
+        _navegador.NavigateTo("/confederaciones");
+    }
+}

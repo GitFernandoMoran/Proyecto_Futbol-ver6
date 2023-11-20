@@ -1,0 +1,95 @@
+﻿@page "/equipo/nueva"
+@page "/equipo/editar/{Id:int}"
+@inject HttpClient _http
+@inject NavigationManager _navegar
+
+<h3>@letrero Equipo</h3>
+<div class="container">
+
+    <EditForm Model="elequipo" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <div class="mb-3 row">
+            <label for="txtNombreLiga" class="col-sm-2 col-form-label">Nombre del equipo</label>
+            <div class="col-sm-10">
+                <InputText id="txtNombreEquipo" class="form-control" @bind-Value="elequipo.Nombre_equipo" />
+                <ValidationMessage For="()=>elequipo.Nombre_equipo" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtLiga" class="col-sm-2 col-form-label">Liga</label>
+            <div class="col-sm-10">
+                <InputSelect class="form-control" @bind-Value="elequipo.LigaId">
+                    @foreach (LigaDTO liga in lasligasdto)
+                    {
+                        <option value="@liga.Id">@liga.Nombre_liga</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="()=>elequipo.Id" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtCiudad" class="col-sm-2 col-form-label">Ciudad</label>
+            <div class="col-sm-10">
+                <InputText id="txtCiudad" class="form-control" @bind-Value="elequipo.Ciudad" />
+                <ValidationMessage For="()=>elequipo.Ciudad" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtLogo" class="col-sm-2 col-form-label">Logo</label>
+            <div class="col-sm-10">
+                <InputText id="txtLogo" class="form-control" @bind-Value="elequipo.Logo" />
+                <ValidationMessage For="()=>elequipo.Logo" />
+            </div>
+        </div>
+        <button class="btn btn-success" type="submit"><span class="oi oi-check"></span> Guardar</button>
+        <button class="btn btn-danger" @onclick="Cancelar"><span class="oi oi-circle-x"></span> Cancelar</button>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Equipo elequipo = new();
+    private string letrero = "Nueva";
+    private List<Liga> lasligas = new();
+    private List<LigaDTO>? lasligasdto = new();
+
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        lasligasdto = await _http.GetFromJsonAsync<List<LigaDTO>>("api/ligas");
+
+        if (Id != 0)
+        {
+
+            letrero = "Modificar";
+            elequipo = await _http.GetFromJsonAsync<Equipo>($"api/equipos/{Id}");
+
+        }
+        else
+        {
+            letrero = "Nueva";
+            elequipo = new();
+            elequipo.LigaId = lasligasdto[0].Id;
+        }
+    }
+
+    private void Cancelar()
+    {
+        _navegar.NavigateTo("/equipos");
+    }
+    private async Task Guardar()
+    {
+        if (Id == 0)
+        {
+            await _http.PostAsJsonAsync<Equipo>("api/equipos", (elequipo));
+        }
+        else
+        {
+            await _http.PutAsJsonAsync<Equipo>($"api/equipos/{Id}", (elequipo));
+
+        }
+        _navegar.NavigateTo("/equipos");
+    }
+}

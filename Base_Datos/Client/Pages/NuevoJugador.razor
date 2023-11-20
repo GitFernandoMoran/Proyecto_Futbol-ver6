@@ -1,0 +1,122 @@
+﻿@page "/jugador/nueva"
+@page "/jugador/editar/{Id:int}"
+@inject HttpClient _http
+@inject NavigationManager _navegar
+
+<h3>@letrero Jugador</h3>
+<div class="container">
+
+    <EditForm Model="eljugador" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <div class="mb-3 row">
+            <label for="txtNombreJugador" class="col-sm-2 col-form-label">Nombre del jugador</label>
+            <div class="col-sm-10">
+                <InputText id="txtNombreJugador" class="form-control" @bind-Value="eljugador.Nombre_jugador" />
+                <ValidationMessage For="()=>eljugador.Nombre_jugador" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtPartidos" class="col-sm-2 col-form-label">Partidos Jugados</label>
+            <div class="col-sm-10">
+                <InputNumber id="txtPartidos" class="form-control" @bind-Value="eljugador.Partidos_jugados" />
+                <ValidationMessage For="()=>eljugador.Partidos_jugados" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtGoles" class="col-sm-2 col-form-label">Goles</label>
+            <div class="col-sm-10">
+                <InputNumber id="txtGoles" class="form-control" @bind-Value="eljugador.Goles" />
+                <ValidationMessage For="()=>eljugador.Goles" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtAsistencias" class="col-sm-2 col-form-label">Asistencias</label>
+            <div class="col-sm-10">
+                <InputNumber id="txtAsistencias" class="form-control" @bind-Value="eljugador.Asistencias" />
+                <ValidationMessage For="()=>eljugador.Asistencias" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtAmarillas" class="col-sm-2 col-form-label">Tarjetas amarillas</label>
+            <div class="col-sm-10">
+                <InputNumber id="txtAmarillas" class="form-control" @bind-Value="eljugador.Tarjetas_amarillas" />
+                <ValidationMessage For="()=>eljugador.Tarjetas_amarillas" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtRojas" class="col-sm-2 col-form-label">Tarjetas rojas</label>
+            <div class="col-sm-10">
+                <InputNumber id="txtRojas" class="form-control" @bind-Value="eljugador.Tarjetas_rojas" />
+                <ValidationMessage For="()=>eljugador.Tarjetas_rojas" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtConfederacion" class="col-sm-2 col-form-label">Equipo</label>
+            <div class="col-sm-10">
+                <InputSelect class="form-control" @bind-Value="eljugador.EquipoId">
+                    @foreach (EquipoDTO equipo in losequiposdto)
+                    {
+                        <option value="@equipo.Id">@equipo.Nombre_equipo</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="()=>eljugador.Id" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtLogo" class="col-sm-2 col-form-label">Fotografia</label>
+            <div class="col-sm-10">
+                <InputText id="txtLogo" class="form-control" @bind-Value="eljugador.Fotografia" />
+                <ValidationMessage For="()=>eljugador.Fotografia" />
+            </div>
+        </div>
+        <button class="btn btn-success" type="submit"><span class="oi oi-check"></span> Guardar</button>
+        <button class="btn btn-danger" @onclick="Cancelar"><span class="oi oi-circle-x"></span> Cancelar</button>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Jugador eljugador = new();
+    private string letrero = "Nueva";
+    private List<Equipo> losequipos = new();
+    private List<EquipoDTO> losequiposdto = new();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        losequiposdto = await _http.GetFromJsonAsync<List<EquipoDTO>>("api/equipos");
+
+        if (Id != 0)
+        {
+
+            letrero = "Modificar";
+            eljugador = await _http.GetFromJsonAsync<Jugador>($"api/jugadores/{Id}");
+
+        }
+        else
+        {
+            letrero = "Nueva";
+            eljugador = new();
+            eljugador.EquipoId = losequiposdto[0].Id;
+        }
+    }
+
+    private void Cancelar()
+    {
+        _navegar.NavigateTo("/jugadores");
+    }
+    private async Task Guardar()
+    {
+        if (Id == 0)
+        {
+            await _http.PostAsJsonAsync<Jugador>("api/jugadores", (eljugador));
+        }
+        else
+        {
+            await _http.PutAsJsonAsync<Jugador>($"api/jugadores/{Id}", (eljugador));
+
+        }
+        _navegar.NavigateTo("/jugadores");
+    }
+}

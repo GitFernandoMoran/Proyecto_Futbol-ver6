@@ -1,0 +1,93 @@
+﻿@page "/liga/nueva"
+@page "/editar/{Id:int}"
+@inject HttpClient _http
+@inject NavigationManager _navegar
+
+<h3>@letrero Liga</h3>
+<div class="container">
+
+    <EditForm Model="laliga" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <div class="mb-3 row">
+            <label for="txtNombreLiga" class="col-sm-2 col-form-label">Nombre de la liga</label>
+            <div class="col-sm-10">
+                <InputText id="txtNombreLiga" class="form-control" @bind-Value="laliga.Nombre_liga" />
+                <ValidationMessage For="()=>laliga.Nombre_liga" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtConfederacion" class="col-sm-2 col-form-label">Confederacion</label>
+            <div class="col-sm-10">
+                <InputSelect class="form-control" @bind-Value="laliga.ConfederacionId">
+                    @foreach (Confederacion confederacion in lasconfederaciones)
+                    {
+                        <option value="@confederacion.Id">@confederacion.Nombre_confederacion</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="()=>laliga.Id" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtPais" class="col-sm-2 col-form-label">Pais</label>
+            <div class="col-sm-10">
+                <InputText id="txtPais" class="form-control" @bind-Value="laliga.Pais" />
+                <ValidationMessage For="()=>laliga.Pais" />
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="txtLogo" class="col-sm-2 col-form-label">Logo</label>
+            <div class="col-sm-10">
+                <InputText id="txtLogo" class="form-control" @bind-Value="laliga.Logo" />
+                <ValidationMessage For="()=>laliga.Logo" />
+            </div>
+        </div>
+        <button class="btn btn-success" type="submit"><span class="oi oi-check"></span> Guardar</button>
+        <button class="btn btn-danger" @onclick="Cancelar"><span class="oi oi-circle-x"></span> Cancelar</button>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Liga laliga = new();
+    private string letrero = "Nueva";
+    private List<Confederacion> lasconfederaciones = new();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        lasconfederaciones = await _http.GetFromJsonAsync<List<Confederacion>>("api/confederaciones");
+
+        if (Id != 0)
+        {
+
+            letrero = "Modificar";
+            laliga = await _http.GetFromJsonAsync<Liga>($"api/ligas/{Id}");
+
+        }
+        else
+        {
+            letrero = "Nueva";
+            laliga = new();
+            laliga.ConfederacionId = lasconfederaciones[0].Id;
+        }
+    }
+
+    private void Cancelar()
+    {
+        _navegar.NavigateTo("/ligas");
+    }
+    private async Task Guardar()
+    {
+        if (Id == 0)
+        {
+            await _http.PostAsJsonAsync<Liga>("api/ligas", (laliga));
+        }
+        else
+        {
+            await _http.PutAsJsonAsync<Liga>($"api/ligas/{Id}", (laliga));
+
+        }
+        _navegar.NavigateTo("/ligas");
+    }
+}

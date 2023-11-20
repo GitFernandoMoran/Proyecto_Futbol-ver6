@@ -1,0 +1,72 @@
+﻿@page "/equipos"
+@inject HttpClient _http
+@inject NavigationManager _navegar
+
+<h1>Equipos</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre del equipo</th>
+            <th>Ciudad</th>
+            <th>Liga</th>
+            <th>Logo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (EquipoDTO equipo in losequipos)
+        {
+            <tr>
+                <td>
+                    @equipo.Nombre_equipo
+                </td>
+                <td>
+                    @equipo.Ciudad
+                </td>
+                <td>
+                    @equipo.Liga
+                </td>
+                <td>
+                    <img src="@equipo.Logo" style="width:90px">
+                </td>
+                <td>
+                    <button class="btn btn-sm" @onclick="()=>Modificar(equipo.Id)"><span class="oi oi-pencil"></span></button>
+                    <button class="btn btn-sm" @onclick="()=>Eliminar(equipo.Id)"><span class="oi oi-trash"></span></button>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@code {
+    //Ctrl+. (Para resolver errores)
+    private List<EquipoDTO>? losequipos = new();
+    private int elId;
+
+    private async Task CargarDatos()
+    {
+        losequipos = await _http.GetFromJsonAsync<List<EquipoDTO>>("api/equipos");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private void Agregar()
+    {
+        _navegar.NavigateTo("/equipo/nueva");
+    }
+
+    private async Task Eliminar(int id)
+    {
+        await _http.DeleteAsync($"api/equipos/{id}");
+        await CargarDatos();
+    }
+
+    private void Modificar(int id)
+    {
+        _navegar.NavigateTo($"/equipo/editar/{id}");
+    }
+}
